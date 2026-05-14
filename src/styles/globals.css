@@ -1,0 +1,168 @@
+/* Mobile-first: fit screen edge to edge */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Disable text selection globally */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Allow selection only in inputs and textareas */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Inbox selectable text */
+.inbox-selectable {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Safe area insets for phones with notches */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Bottom nav safe area */
+.bottom-nav-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px));
+}
+
+/* Content padding above bottom nav */
+.pb-nav {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 8px);
+}
+
+/* Animated inbox themes */
+@keyframes ocean-wave {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes forest-sway {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+@keyframes aurora {
+  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+  50% { background-position: 100% 50%; filter: hue-rotate(30deg); }
+  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+}
+
+@keyframes sunset-glow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes float-bubbles {
+  0% { background-position: 0% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+.theme-ocean {
+  background: linear-gradient(-45deg, #0077b6, #00b4d8, #90e0ef, #0096c7);
+  background-size: 400% 400%;
+  animation: ocean-wave 6s ease infinite;
+}
+.theme-forest {
+  background: linear-gradient(-45deg, #1b4332, #2d6a4f, #40916c, #52b788);
+  background-size: 400% 400%;
+  animation: forest-sway 8s ease infinite;
+}
+.theme-house {
+  background: linear-gradient(-45deg, #e9c46a, #f4a261, #e76f51, #264653);
+  background-size: 400% 400%;
+  animation: sunset-glow 7s ease infinite;
+}
+.theme-aurora {
+  background: linear-gradient(-45deg, #7209b7, #3a0ca3, #4cc9f0, #f72585);
+  background-size: 400% 400%;
+  animation: aurora 10s ease infinite;
+}
+.theme-desert {
+  background: linear-gradient(-45deg, #d4a373, #ccd5ae, #e9edc9, #fefae0);
+  background-size: 400% 400%;
+  animation: sunset-glow 9s ease infinite;
+}
+.theme-space {
+  background: linear-gradient(-45deg, #03045e, #023e8a, #0077b6, #1a1a2e);
+  background-size: 400% 400%;
+  animation: aurora 12s ease infinite;
+}
+.theme-cherry {
+  background: linear-gradient(-45deg, #ff006e, #fb5607, #ffbe0b, #ff006e);
+  background-size: 400% 400%;
+  animation: sunset-glow 5s ease infinite;
+}
+.theme-winter {
+  background: linear-gradient(-45deg, #caf0f8, #ade8f4, #90e0ef, #48cae4);
+  background-size: 400% 400%;
+  animation: ocean-wave 10s ease infinite;
+}
+.theme-lavender {
+  background: linear-gradient(-45deg, #7b2d8b, #9d4edd, #c77dff, #e0aaff);
+  background-size: 400% 400%;
+  animation: aurora 8s ease infinite;
+}
+.theme-volcano {
+  background: linear-gradient(-45deg, #6a040f, #9d0208, #d00000, #e85d04);
+  background-size: 400% 400%;
+  animation: sunset-glow 6s ease infinite;
+}
+
+/* Scrollbar hide */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Story progress bar transition */
+.story-progress { transition: width 0.1s linear; }
+
+/* Smooth modal */
+.modal-enter {
+  animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Call ring animation */
+@keyframes ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+.ring-pulse { animation: ring-pulse 1.5s ease-in-out infinite; }
+
+/* Pulse dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.pulse-dot { animation: pulse-dot 1s ease-in-out infinite; }
