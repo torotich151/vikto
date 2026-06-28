@@ -46,53 +46,81 @@ export function Home() {
       song: "As It Was – Harry Styles",
       views: 2100,
     },
+    {
+      id: "4",
+      username: "Narek",
+      avatar: "https://i.pravatar.cc/150?img=3",
+      images: ["https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&h=800&fit=crop"],
+      likes: 312,
+      caption: "Morning run done 💪 Nothing beats the feeling after a great workout!\n\n#Fitness #MorningRun #HealthyLife",
+      comments: 31,
+      timestamp: "11 hours ago",
+      views: 1580,
+    },
+    {
+      id: "5",
+      username: "Ani",
+      avatar: "https://i.pravatar.cc/150?img=20",
+      images: ["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&h=800&fit=crop"],
+      likes: 175,
+      caption: "Home-cooked pasta night 🍝 Simple ingredients, big flavors!",
+      comments: 19,
+      timestamp: "Yesterday",
+      location: "Yerevan, Armenia",
+      views: 932,
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#E91E63] via-[#FF5722] to-[#FFC107]">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-[#E91E63] to-[#FF5722] px-4 py-4 sticky top-0 z-40 shadow-lg" style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <img
-              src="https://i.pravatar.cc/150?img=30"
-              alt="Profile"
-              className="w-12 h-12 rounded-full border-2 border-white object-cover"
-            />
-            <div>
-              <h2 className="text-white font-semibold text-lg">Hello, Armenam 👋</h2>
-              <p className="text-white/90 text-sm">What's on your mind?</p>
+    <div className="flex flex-col bg-gray-100 dark:bg-gray-950 min-h-full">
+      {/* ── Sticky top section: header + stories + create card ── */}
+      <div className="sticky top-0 z-40 flex-shrink-0">
+        {/* Header */}
+        <header
+          className="bg-gradient-to-r from-[#E91E63] to-[#FF5722] px-4 pt-4 pb-3 shadow-md"
+          style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img
+                src="https://i.pravatar.cc/150?img=30"
+                alt="Profile"
+                className="w-11 h-11 rounded-full border-2 border-white object-cover"
+              />
+              <div>
+                <h2 className="text-white font-bold text-lg leading-tight">Hello, Armenam 👋</h2>
+                <p className="text-white/80 text-sm">What's on your mind?</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link to="/explore" className="bg-white/20 backdrop-blur-sm p-2.5 rounded-full">
+                <Search className="w-5 h-5 text-white" />
+              </Link>
+              <Link to="/messages" className="bg-white/20 backdrop-blur-sm p-2.5 rounded-full">
+                <MessageCircle className="w-5 h-5 text-white" />
+              </Link>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to="/explore" className="bg-white/20 backdrop-blur-sm p-2 rounded-full">
-              <Search className="w-6 h-6 text-white" />
-            </Link>
-            <Link to="/messages" className="bg-white/20 backdrop-blur-sm p-2 rounded-full">
-              <MessageCircle className="w-6 h-6 text-white" />
-            </Link>
-          </div>
+        </header>
+
+        {/* Stories strip */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3">
+          <Stories />
         </div>
-      </header>
 
-      {/* Stories */}
-      <div className="px-4 py-3">
-        <Stories />
+        {/* Create post card */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3">
+          <CreatePostCard />
+        </div>
       </div>
 
-      {/* Create Post Card */}
-      <div className="px-4 pb-3">
-        <CreatePostCard />
-      </div>
-
-      {/* Feed */}
-      <div className="space-y-4 px-4">
+      {/* ── Scrollable posts feed ── */}
+      <div className="flex-1 space-y-3 pt-3 px-0 pb-4">
         {posts.map((post) => (
           <Post key={post.id} {...post} />
         ))}
+        <div className="h-2" />
       </div>
-
-      <div className="h-4" />
     </div>
   );
 }
