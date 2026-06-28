@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { Home, Compass, PlusCircle, Bell, MessageCircle } from "lucide-react";
+import { Home, Compass, PlusCircle, Bell, User } from "lucide-react";
 
 export function BottomNav() {
   const location = useLocation();
@@ -9,7 +9,7 @@ export function BottomNav() {
     { path: "/explore", icon: Compass, label: "Explore" },
     { path: "/create", icon: PlusCircle, label: "Create" },
     { path: "/notifications", icon: Bell, label: "Alerts" },
-    { path: "/messages", icon: MessageCircle, label: "Inbox" },
+    { path: "/profile", icon: User, label: "Profile" },
   ];
 
   return (
@@ -40,9 +40,6 @@ export function BottomNav() {
                 strokeWidth={isActive ? 2.5 : 2}
               />
               {/* Unread badge */}
-              {item.path === "/messages" && (
-                <span className="absolute top-1 right-[calc(50%-12px)] w-4 h-4 bg-[#E91E63] text-white text-[9px] font-bold rounded-full flex items-center justify-center">4</span>
-              )}
               {item.path === "/notifications" && (
                 <span className="absolute top-1 right-[calc(50%-12px)] w-4 h-4 bg-orange-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">7</span>
               )}
