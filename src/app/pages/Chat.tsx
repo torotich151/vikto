@@ -3,9 +3,10 @@ import { useParams, useNavigate } from "react-router";
 import {
   ArrowLeft, Phone, Video, MoreVertical, Image, Smile,
   Send, Mic, X, Play, Paperclip, Camera, Copy, Check,
-  Palette, MapPin, Music, FileVideo,
+  Palette, MapPin, Music, FileVideo, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { CallingModal } from "../components/CallingModal";
+import { compressImages } from "../utils/imageCompress";
 
 const INBOX_THEMES = [
   { id: "default", name: "Default", class: "bg-gray-50", preview: "#f9fafb" },
@@ -25,6 +26,7 @@ interface Message {
   id: string;
   text?: string;
   imageUrl?: string;
+  imageUrls?: string[];
   videoUrl?: string;
   audioUrl?: string;
   audioDuration?: number;
@@ -32,6 +34,8 @@ interface Message {
   isSent: boolean;
   status?: "sent" | "delivered" | "read";
 }
+
+const MAX_INBOX_PHOTOS = 5;
 
 function linkify(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -171,6 +175,26 @@ function OTPChip({ code, className }: { code: string; className: string }) {
   );
 }
 
+function BulkImageBubble({ images, isSent, onPreview }: { images: string[]; isSent: boolean; onPreview: (url: string) => void }) {
+  const [current, setCurrent] = useState(0);
+  const n = images.length;
+  return (
+    <div className={`rounded-2xl overflow-hidden shadow-sm ${isSent ? "rounded-br-sm" : "rounded-bl-sm"}`} style={{ maxWidth: 220 }}>
+      <div className="relative cursor-pointer" onClick={() => onPreview(images[current])}>
+        <img src={images[current]} alt="shared" className="w-full object-cover" style={{ maxHeight: 220 }} />
+        <div className="absolute top-2 right-2 bg-black/60 text-white text-xs font-bold rounded-full px-2 py-0.5">{current + 1}/{n}</div>
+      </div>
+      <div className="flex gap-1 p-1.5 bg-black/10">
+        {images.map((src, i) => (
+          <button key={i} onClick={() => setCurrent(i)}>
+            <img src={src} alt="" className={`w-8 h-8 rounded-lg object-cover border-2 ${i === current ? "border-white" : "border-transparent opacity-60"}`} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Chat() {
   const { chatId } = useParams();
   const navigate = useNavigate();
@@ -213,35 +237,38 @@ export function Chat() {
     setMessageText("");
   };
 
-  const handleSendMedia = async (accept: string) => {
+  const handleSendMedia = async (accept: string, multiple = false) => {
     setShowAttachMenu(false);
     return new Promise<void>((resolve) => {
       const input = document.createElement("input");
       input.type = "file";
       input.accept = accept;
-      input.onchange = () => {
-        const file = input.files?.[0];
-        if (!file) return resolve();
-        if (file.size > 2 * 1024 * 1024) {
-          alert("File too large. Maximum size is 2MB.");
-          return resolve();
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-          const url = reader.result as string;
-          const isVideo = file.type.startsWith("video/");
-          const msg: Message = {
-            id: Date.now().toString(),
-            imageUrl: isVideo ? undefined : url,
-            videoUrl: isVideo ? url : undefined,
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            isSent: true,
-            status: "sent",
+      input.multiple = multiple;
+      input.onchange = async () => {
+        const files = input.files;
+        if (!files || files.length === 0) return resolve();
+        const isVideo = files[0].type.startsWith("video/");
+        if (isVideo) {
+          // Single video, no compress
+          if (files[0].size > 50 * 1024 * 1024) { alert("Video too large. Max 50MB."); return resolve(); }
+          const reader = new FileReader();
+          reader.onload = () => {
+            setMessages((prev) => [...prev, { id: Date.now().toString(), videoUrl: reader.result as string, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), isSent: true, status: "sent" }]);
+            resolve();
           };
-          setMessages((prev) => [...prev, msg]);
+          reader.readAsDataURL(files[0]);
+        } else {
+          // Images: compress + bulk (max 5)
+          try {
+            const compressed = await compressImages(files, MAX_INBOX_PHOTOS, { maxWidth: 900, maxHeight: 900, quality: 0.78 });
+            if (compressed.length === 1) {
+              setMessages((prev) => [...prev, { id: Date.now().toString(), imageUrl: compressed[0], timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), isSent: true, status: "sent" }]);
+            } else {
+              setMessages((prev) => [...prev, { id: Date.now().toString(), imageUrls: compressed, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), isSent: true, status: "sent" }]);
+            }
+          } catch { alert("Failed to process images."); }
           resolve();
-        };
-        reader.readAsDataURL(file);
+        }
       };
       input.click();
     });
@@ -457,8 +484,15 @@ export function Chat() {
                   className={`rounded-2xl overflow-hidden shadow-sm cursor-pointer ${msg.isSent ? "rounded-br-sm" : "rounded-bl-sm"}`}
                   onClick={() => setPreviewMedia({ url: msg.imageUrl!, type: "image" })}
                 >
-                  <img src={msg.imageUrl} alt="shared" className="max-w-[220px] max-h-[220px] object-cover" />
+                  <img src={msg.imageUrl} alt="shared" className="max-w-[220px] max-h-[280px] object-cover block" />
                 </div>
+              )}
+              {msg.imageUrls && msg.imageUrls.length > 1 && (
+                <BulkImageBubble
+                  images={msg.imageUrls}
+                  isSent={msg.isSent}
+                  onPreview={(url) => setPreviewMedia({ url, type: "image" })}
+                />
               )}
               {msg.videoUrl && (
                 <div
@@ -541,11 +575,14 @@ export function Chat() {
               {showAttachMenu && (
                 <div className="absolute bottom-10 left-0 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 min-w-[170px] z-20">
                   <button
-                    onClick={() => handleSendMedia("image/*")}
+                    onClick={() => handleSendMedia("image/*", true)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-xl text-gray-700"
                   >
                     <Image className="w-5 h-5 text-[#E91E63]" />
-                    <span className="text-sm font-medium">Photo</span>
+                    <div className="text-left">
+                      <p className="text-sm font-medium">Photos</p>
+                      <p className="text-xs text-gray-400">Up to {MAX_INBOX_PHOTOS} – auto-compressed</p>
+                    </div>
                   </button>
                   <button
                     onClick={() => handleSendMedia("video/*")}
@@ -555,7 +592,7 @@ export function Chat() {
                     <span className="text-sm font-medium">Video</span>
                   </button>
                   <button
-                    onClick={() => handleSendMedia("image/*")}
+                    onClick={() => handleSendMedia("image/*", false)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-xl text-gray-700"
                   >
                     <Camera className="w-5 h-5 text-blue-500" />
@@ -568,7 +605,6 @@ export function Chat() {
                     <Music className="w-5 h-5 text-green-500" />
                     <span className="text-sm font-medium">Audio</span>
                   </button>
-                  <p className="text-xs text-gray-400 px-3 pb-1">Max 2MB per file</p>
                 </div>
               )}
             </div>
