@@ -1,27 +1,31 @@
 import { Outlet, useLocation } from "react-router";
 import { BottomNav } from "../components/BottomNav";
+import { useApp } from "../context/AppContext";
 
 export function RootLayout() {
   const location = useLocation();
+  const { darkMode } = useApp();
 
-  const hideBottomNav = ['/create', '/login', '/signup'].some(path =>
-    location.pathname.startsWith(path)
-  ) || location.pathname.startsWith('/messages/');
+  const isFullscreenPage =
+    location.pathname.startsWith("/messages/") ||
+    location.pathname.startsWith("/create");
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-[#E91E63] via-[#FF5722] to-[#FFC107] flex flex-col w-full max-w-[480px] mx-auto relative"
-      style={{ minHeight: "100dvh" }}
+      className={`flex flex-col w-full max-w-[480px] mx-auto relative ${darkMode ? "dark" : ""} app-frame`}
+      style={{ minHeight: "100dvh", backgroundColor: darkMode ? "#030712" : "#f3f4f6" }}
     >
       <main
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto overflow-x-hidden"
         style={{
-          paddingBottom: hideBottomNav ? "env(safe-area-inset-bottom)" : "calc(4rem + env(safe-area-inset-bottom) + 8px)",
+          paddingBottom: isFullscreenPage
+            ? "env(safe-area-inset-bottom)"
+            : "calc(4.5rem + env(safe-area-inset-bottom) + 0.5rem)",
         }}
       >
         <Outlet />
       </main>
-      {!hideBottomNav && <BottomNav />}
+      {!isFullscreenPage && <BottomNav />}
     </div>
   );
 }
