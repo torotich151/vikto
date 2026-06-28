@@ -14,42 +14,23 @@
         width: 100%;
         margin: 0;
         padding: 0;
-        background: #E91E63;
+        background: #f3f4f6;
         overflow-x: hidden;
+      }
+      html.dark, body.dark {
+        background: #030712;
       }
       #root {
         height: 100%;
+        min-height: 100dvh;
         width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        background: transparent;
-      }
-      /* On desktop: show phone frame centered with shadow */
-      @media (min-width: 600px) {
-        html, body {
-          background: #1a1a2e;
-        }
-        #root {
-          align-items: center;
-          min-height: 100vh;
-          padding: 24px 16px;
-        }
-        .app-frame {
-          box-shadow: 0 25px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.12);
-          border-radius: 40px;
-          overflow: hidden;
-        }
       }
       /* Mobile: truly edge-to-edge */
-      @media (max-width: 599px) {
+      @media (max-width: 1023px) {
         html, body, #root {
           height: 100dvh;
           min-height: 100dvh;
-        }
-        .app-frame {
-          border-radius: 0 !important;
-          min-height: 100dvh;
+          background: #E91E63;
         }
       }
     </style>
