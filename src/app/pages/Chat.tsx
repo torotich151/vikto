@@ -4,8 +4,11 @@ import {
   ArrowLeft, Phone, Video, MoreVertical, Image, Smile,
   Send, Mic, X, Play, Paperclip, Camera, Copy, Check,
   Palette, MapPin, Music, FileVideo, ChevronLeft, ChevronRight,
+  CornerUpLeft, Forward, Star, Undo2, Trash2, Heart, ThumbsUp,
+  Laugh, Frown, Angry, Meh,
 } from "lucide-react";
 import { CallingModal } from "../components/CallingModal";
+import { ForwardModal } from "../components/ForwardModal";
 import { compressImages } from "../utils/imageCompress";
 
 const INBOX_THEMES = [
@@ -33,6 +36,7 @@ interface Message {
   timestamp: string;
   isSent: boolean;
   status?: "sent" | "delivered" | "read";
+  replyTo?: { id: string; text?: string; isSent: boolean };
 }
 
 const MAX_INBOX_PHOTOS = 5;
@@ -216,26 +220,19 @@ export function Chat() {
   const [previewMedia, setPreviewMedia] = useState<{ url: string; type: "image" | "video" } | null>(null);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [msgMenu, setMsgMenu] = useState<{ msg: Message; y: number } | null>(null);
+  const [swipeOffsets, setSwipeOffsets] = useState<Record<string, number>>({});
+  const [forwardMsg, setForwardMsg] = useState<Message | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recordingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const msgTouchStartX = useRef<Record<string, number>>({});
+  const longPressTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  const handleSend = () => {
-    if (!messageText.trim()) return;
-    const msg: Message = {
-      id: Date.now().toString(),
-      text: messageText,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      isSent: true,
-      status: "sent",
-    };
-    setMessages((prev) => [...prev, msg]);
-    setMessageText("");
-  };
 
   const handleSendMedia = async (accept: string, multiple = false) => {
     setShowAttachMenu(false);
@@ -320,9 +317,12 @@ export function Chat() {
   const formatDuration = (s: number) =>
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-  const handleMessageLongPress = (id: string) => {
-    setSelectionMode(true);
-    setSelectedMessages([id]);
+  const handleMessageLongPress = (msg: Message, e: React.TouchEvent | React.MouseEvent) => {
+    if (navigator.vibrate) navigator.vibrate(35);
+    const el = (e.target as HTMLElement).closest('[data-msgid]');
+    const rect = el?.getBoundingClientRect();
+    const y = rect ? Math.min(rect.top - 10, window.innerHeight - 300) : 200;
+    setMsgMenu({ msg, y: Math.max(60, y) });
   };
 
   const handleCopySelected = () => {
@@ -335,10 +335,64 @@ export function Chat() {
     setSelectedMessages([]);
   };
 
+  const handleMsgTouchStart = (msgId: string, e: React.TouchEvent) => {
+    msgTouchStartX.current[msgId] = e.changedTouches[0].clientX;
+    const msg = messages.find(m => m.id === msgId)!;
+    longPressTimers.current[msgId] = setTimeout(() => handleMessageLongPress(msg, e), 500);
+  };
+
+  const handleMsgTouchMove = (msgId: string, e: React.TouchEvent) => {
+    clearTimeout(longPressTimers.current[msgId]);
+    const diff = e.changedTouches[0].clientX - (msgTouchStartX.current[msgId] || 0);
+    if (diff > 0 && diff < 80) {
+      setSwipeOffsets(prev => ({ ...prev, [msgId]: diff }));
+    }
+  };
+
+  const handleMsgTouchEnd = (msgId: string, e: React.TouchEvent) => {
+    clearTimeout(longPressTimers.current[msgId]);
+    const diff = e.changedTouches[0].clientX - (msgTouchStartX.current[msgId] || 0);
+    if (diff > 50) {
+      const msg = messages.find(m => m.id === msgId);
+      if (msg) { setReplyTo(msg); if (navigator.vibrate) navigator.vibrate(20); }
+    }
+    setSwipeOffsets(prev => ({ ...prev, [msgId]: 0 }));
+  };
+
+  const doDeleteMessage = (id: string) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
+    setMsgMenu(null);
+  };
+
+  const doUnsendMessage = (id: string) => {
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, text: "You unsent a message", imageUrl: undefined, imageUrls: undefined, videoUrl: undefined, audioUrl: undefined } : m));
+    setMsgMenu(null);
+  };
+
+  const doCopyMessage = (text?: string) => {
+    if (text) navigator.clipboard.writeText(text).catch(() => {});
+    setMsgMenu(null);
+  };
+
   const themeIsLight = selectedTheme.id === "default" || selectedTheme.id === "desert" || selectedTheme.id === "winter";
 
+  const handleSend = () => {
+    if (!messageText.trim()) return;
+    const msg: Message = {
+      id: Date.now().toString(),
+      text: messageText,
+      replyTo: replyTo ? { id: replyTo.id, text: replyTo.text, isSent: replyTo.isSent } : undefined,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      isSent: true,
+      status: "sent",
+    };
+    setMessages((prev) => [...prev, msg]);
+    setMessageText("");
+    setReplyTo(null);
+  };
+
   return (
-    <div className="h-screen flex flex-col max-w-[480px] mx-auto" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <div className="h-screen flex flex-col max-w-[480px] mx-auto" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} onClick={() => setMsgMenu(null)}>
       {/* Calling modal */}
       {callModal && (
         <CallingModal
@@ -446,28 +500,92 @@ export function Chat() {
         </div>
       )}
 
+      {/* Forward modal */}
+      {forwardMsg && (
+        <ForwardModal
+          messageText={forwardMsg.text}
+          onClose={() => setForwardMsg(null)}
+        />
+      )}
+
+      {/* Message long-press context menu */}
+      {msgMenu && (
+        <div className="fixed inset-0 z-50 bg-black/30" onClick={() => setMsgMenu(null)}>
+          <div
+            className="absolute bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden w-60"
+            style={{ top: msgMenu.y, left: "50%", transform: "translateX(-50%)" }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Reaction row — lucide icons */}
+            <div className="flex items-center justify-around px-3 py-3 border-b border-gray-100 dark:border-gray-700">
+              {[
+                { Icon: Heart, color: "text-red-500" },
+                { Icon: ThumbsUp, color: "text-blue-500" },
+                { Icon: Laugh, color: "text-yellow-500" },
+                { Icon: Meh, color: "text-orange-400" },
+                { Icon: Frown, color: "text-indigo-400" },
+                { Icon: Angry, color: "text-red-600" },
+              ].map(({ Icon, color }) => (
+                <button key={color} onClick={() => setMsgMenu(null)}
+                  className={`p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-125 ${color}`}>
+                  <Icon className="w-5 h-5" fill="currentColor" />
+                </button>
+              ))}
+            </div>
+            {[
+              { Icon: CornerUpLeft, label: "Reply", action: () => { setReplyTo(msgMenu.msg); setMsgMenu(null); }, danger: false },
+              { Icon: Copy, label: "Copy", action: () => doCopyMessage(msgMenu.msg.text), danger: false, show: !!msgMenu.msg.text },
+              { Icon: Forward, label: "Forward", action: () => { setForwardMsg(msgMenu.msg); setMsgMenu(null); }, danger: false },
+              { Icon: Star, label: "Star", action: () => setMsgMenu(null), danger: false },
+              ...(msgMenu.msg.isSent ? [{ Icon: Undo2, label: "Unsend", action: () => doUnsendMessage(msgMenu.msg.id), danger: true }] : []),
+              { Icon: Trash2, label: "Delete", action: () => doDeleteMessage(msgMenu.msg.id), danger: true },
+            ].filter(item => item.show !== false).map(item => (
+              <button key={item.label} onClick={item.action}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 first:border-0 ${item.danger ? "text-red-500" : "text-gray-700 dark:text-gray-200"}`}>
+                <item.Icon className="w-4.5 h-4.5 flex-shrink-0" style={{ width: 18, height: 18 }} />
+                <span className="font-medium text-sm">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div
-        className={`flex-1 overflow-y-auto px-4 py-4 space-y-3 ${selectedTheme.class}`}
+        className={`flex-1 overflow-y-auto px-4 py-4 space-y-1 ${selectedTheme.class}`}
         style={{ minHeight: 0 }}
       >
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.isSent ? "justify-end" : "justify-start"} ${selectionMode && selectedMessages.includes(msg.id) ? "opacity-70" : ""}`}
+            data-msgid={msg.id}
+            className={`flex ${msg.isSent ? "justify-end" : "justify-start"} py-1 transition-transform`}
+            style={{ transform: `translateX(${swipeOffsets[msg.id] || 0}px)` }}
+            onTouchStart={e => handleMsgTouchStart(msg.id, e)}
+            onTouchMove={e => handleMsgTouchMove(msg.id, e)}
+            onTouchEnd={e => handleMsgTouchEnd(msg.id, e)}
+            onContextMenu={(e) => { e.preventDefault(); handleMessageLongPress(msg, e); }}
             onClick={() => {
               if (selectionMode) {
-                setSelectedMessages((prev) =>
-                  prev.includes(msg.id) ? prev.filter((id) => id !== msg.id) : [...prev, msg.id]
-                );
+                setSelectedMessages(prev => prev.includes(msg.id) ? prev.filter(id => id !== msg.id) : [...prev, msg.id]);
               }
             }}
-            onContextMenu={(e) => { e.preventDefault(); handleMessageLongPress(msg.id); }}
           >
+            {/* Reply arrow hint on swipe */}
+            {!msg.isSent && (swipeOffsets[msg.id] || 0) > 20 && (
+              <div className="flex items-center justify-center w-7 text-gray-400 mr-1"><span className="text-lg">↩️</span></div>
+            )}
             {!msg.isSent && (
               <img src="https://i.pravatar.cc/150?img=1" alt="" className="w-7 h-7 rounded-full mr-2 self-end flex-shrink-0 object-cover" />
             )}
-            <div className={`max-w-[75%] ${msg.isSent ? "items-end" : "items-start"} flex flex-col`}>
+            <div className={`max-w-[78%] ${msg.isSent ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
+              {/* Reply preview */}
+              {msg.replyTo && (
+                <div className={`px-3 py-1.5 rounded-xl text-xs border-l-4 mb-0.5 ${msg.isSent ? "bg-white/20 border-white/60 text-white/80" : "bg-gray-100 dark:bg-gray-700 border-gray-400 text-gray-500 dark:text-gray-400"}`}>
+                  <p className="font-semibold text-[10px] mb-0.5">{msg.replyTo.isSent ? "You" : "Lusine"}</p>
+                  <p className="truncate max-w-[160px]">{msg.replyTo.text || "📷 Media"}</p>
+                </div>
+              )}
               {msg.text && (
                 <div
                   className={`px-4 py-2.5 rounded-2xl shadow-sm ${
@@ -546,7 +664,18 @@ export function Chat() {
       </div>
 
       {/* Input Area */}
-      <div className={`border-t ${themeIsLight ? "bg-white border-gray-100" : "bg-white/95 border-white/20"} px-3 py-2 flex-shrink-0`}>
+      <div className={`border-t ${themeIsLight ? "bg-white border-gray-100" : "bg-white/95 border-white/20"} px-3 pt-2 pb-2 flex-shrink-0`}>
+        {/* Reply preview bar */}
+        {replyTo && (
+          <div className="flex items-center gap-2 mb-2 bg-gray-100 rounded-xl px-3 py-2">
+            <div className="w-1 h-8 bg-[#E91E63] rounded-full flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-[#E91E63]">{replyTo.isSent ? "You" : "Lusine"}</p>
+              <p className="text-xs text-gray-600 truncate">{replyTo.text || "📷 Media"}</p>
+            </div>
+            <button onClick={() => setReplyTo(null)} className="text-gray-400 flex-shrink-0"><X className="w-4 h-4" /></button>
+          </div>
+        )}
         {isRecording ? (
           <div className="flex items-center gap-3">
             <button onClick={stopRecording} className="text-red-500">
