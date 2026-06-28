@@ -11,33 +11,45 @@
       *, *::before, *::after { box-sizing: border-box; }
       html, body {
         height: 100%;
+        width: 100%;
         margin: 0;
         padding: 0;
-        background: #f3f4f6;
+        background: #E91E63;
         overflow-x: hidden;
-      }
-      html.dark, html[data-theme="dark"] {
-        background: #030712;
       }
       #root {
         height: 100%;
+        width: 100%;
         display: flex;
         justify-content: center;
         align-items: flex-start;
-        background: inherit;
+        background: transparent;
       }
-      /* On desktop: show phone frame */
+      /* On desktop: show phone frame centered with shadow */
       @media (min-width: 600px) {
+        html, body {
+          background: #1a1a2e;
+        }
         #root {
           align-items: center;
           min-height: 100vh;
           padding: 24px 16px;
         }
-        /* The app max-width is 480px and it gets a card shadow on desktop */
         .app-frame {
-          box-shadow: 0 25px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
+          box-shadow: 0 25px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.12);
           border-radius: 40px;
           overflow: hidden;
+        }
+      }
+      /* Mobile: truly edge-to-edge */
+      @media (max-width: 599px) {
+        html, body, #root {
+          height: 100dvh;
+          min-height: 100dvh;
+        }
+        .app-frame {
+          border-radius: 0 !important;
+          min-height: 100dvh;
         }
       }
     </style>
