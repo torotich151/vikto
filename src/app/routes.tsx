@@ -19,28 +19,19 @@ import { Settings } from "./pages/Settings";
 import { ChangePassword } from "./pages/ChangePassword";
 import { Terms } from "./pages/Terms";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { BlockedAccounts } from "./pages/BlockedAccounts";
+import { WhoCanSee } from "./pages/WhoCanSee";
+import { DownloadData } from "./pages/DownloadData";
+import { ReportProblem } from "./pages/ReportProblem";
+import { AppLanguage } from "./pages/AppLanguage";
+import { InboxPrivacy } from "./pages/InboxPrivacy";
 
 export const router = createBrowserRouter([
-  {
-    path: "/login",
-    Component: Login,
-  },
-  {
-    path: "/signup",
-    Component: Signup,
-  },
-  {
-    path: "/story/:username",
-    Component: StoryViewer,
-  },
-  {
-    path: "/create-story",
-    Component: CreateStory,
-  },
-  {
-    path: "/reels",
-    Component: Reels,
-  },
+  { path: "/login", Component: Login },
+  { path: "/signup", Component: Signup },
+  { path: "/story/:username", Component: StoryViewer },
+  { path: "/create-story", Component: CreateStory },
+  { path: "/reels", Component: Reels },
   {
     path: "/",
     Component: RootLayout,
@@ -59,6 +50,12 @@ export const router = createBrowserRouter([
       { path: "change-password", Component: ChangePassword },
       { path: "terms", Component: Terms },
       { path: "privacy-policy", Component: PrivacyPolicy },
+      { path: "blocked-accounts", Component: BlockedAccounts },
+      { path: "who-can-see", Component: WhoCanSee },
+      { path: "download-data", Component: DownloadData },
+      { path: "report-problem", Component: ReportProblem },
+      { path: "app-language", Component: AppLanguage },
+      { path: "inbox-privacy", Component: InboxPrivacy },
     ],
   },
 ]);
