@@ -190,7 +190,7 @@ export function Messages() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-2 sticky top-[calc(7.5rem+env(safe-area-inset-top))] z-30">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-2 z-30">
         <div className="flex">
           {([["all","All"], ["unread","Unread"], ["groups","Groups"], ["archived","Archived"]] as [Tab,string][]).map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)}
