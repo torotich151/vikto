@@ -1,16 +1,49 @@
-
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Untitled</title>
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
-    </head>
-
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
-  
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#E91E63" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>ChatMe</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #f3f4f6;
+        overflow-x: hidden;
+      }
+      html.dark, html[data-theme="dark"] {
+        background: #030712;
+      }
+      #root {
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        background: inherit;
+      }
+      /* On desktop: show phone frame */
+      @media (min-width: 600px) {
+        #root {
+          align-items: center;
+          min-height: 100vh;
+          padding: 24px 16px;
+        }
+        /* The app max-width is 480px and it gets a card shadow on desktop */
+        .app-frame {
+          box-shadow: 0 25px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06);
+          border-radius: 40px;
+          overflow: hidden;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
